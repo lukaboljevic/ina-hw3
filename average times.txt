@@ -12,19 +12,3 @@ Function: erdos_renyi
 	louvain - 0.6125764719999959
 	infomap - 0.0650831200000057
 	label_propagation - 0.04041534559999854
-
-Function: girvan_newman
-	louvain - 0.009722235333333398
-	infomap - 0.003512066666666615
-	label_propagation - 0.0021218893333333354
-
-Function: girvan_newman
-	louvain - 0.009593341333333326
-	infomap - 0.0034160746666666774
-	label_propagation - 0.0021369733333333053
-
-Function: lancichinetti
-	louvain - 0.46963231360000013
-	infomap - 0.13981133519999958
-	label_propagation - 0.11803371279999976
-

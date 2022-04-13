@@ -87,9 +87,15 @@ def generate_girvan(mu):
     for i in range(n):
         for j in range(i + 1, n):
             if graph.nodes[i]['cluster'] == graph.nodes[j]['cluster']:
+                # 20(1-mi) / 23 -> if they are the same cluster; 
+                # 20 because that is its expected degree, 
+                # 1-mi cause for mi = 0 we want all 20 links to be "inside"
                 if random() < avg_degree * (1 - mu) / (cluster_size - 1):
                     graph.add_edge(i, j)
             else:
+                # 20*mi / 48 -> if they are a different cluster, 
+                # 48 cause that's 24 + 24 - number of nodes
+                # in the other communities
                 if random() < avg_degree * mu / (n - cluster_size):
                     graph.add_edge(i, j)
 
@@ -213,7 +219,7 @@ def plot(func, input_list, title, xlabel, metric):
     """
     algo_list = [louvain, infomap, label_propagation]
     colors = ["firebrick", "forestgreen", "goldenrod"]
-    filename = "average times.txt"
+    filename = "average times 2.txt"
     print(f"Function: {func.__name__}")
     plt.style.use("ggplot")
     plt.figure(figsize=(10, 7))
@@ -226,7 +232,7 @@ def plot(func, input_list, title, xlabel, metric):
     for i, algo in enumerate(algo_list):
         print(f"\tCurrent algorithm: {algo.__name__}")
         average_metric, average_time = func(input_list, algo)
-        with open("average times.txt", "a") as f:
+        with open(filename, "a") as f:
             f.write(f"\t{algo.__name__} - {str(average_time)}\n")
             if i == len(algo_list) - 1:
                 f.write("\n")
@@ -243,20 +249,14 @@ girvan_input = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
 lancichinetti_input = [0, 0.2, 0.4, 0.6, 0.8]
 erdos_input = [8, 16, 24, 32, 40]
 
-# filename = "average times.txt"
-# if os.path.exists(filename):
-#     os.remove(filename)
-
 """Girvan Newman"""
-plot(girvan_newman, girvan_input, "Girvan Newman accuracy", r"$\mu$", "NMI")
+# plot(girvan_newman, girvan_input, "Girvan Newman accuracy", r"$\mu$", "NMI")
 
 """Lancichinetti"""
-plot(lancichinetti, lancichinetti_input, "Lancichinetti accuracy",
-    r"$\mu$", "NMI")
+# plot(lancichinetti, lancichinetti_input, "Lancichinetti accuracy", r"$\mu$", "NMI")
 
 """Erdos Renyi"""
-plot(erdos_renyi, erdos_input, "Erdos Renyi robustness", "Average degree",
-    "NVI")
+# plot(erdos_renyi, erdos_input, "Erdos Renyi robustness", "Average degree", "NVI")
 
 """Lusseau dolphin networks"""
 # print("Function: dolfins")
@@ -273,14 +273,4 @@ We expect the performance to fall as mu increases
 
 NMI - larger = better
 NVI - smaller = better
-
-Have a look at time complexities
-
-20(1-mi) / 23 -> ako su isti cluster; 
-20 zato sto ocekujemo 20 da mu toliko bude degree, 
-1-mi zato sto za mi = 0 ocemo da svih 20 bude unutra
-
-20*mi / 48 -> ako su razliciti cluster, 
-48 zato sto je to 24 + 24 broj ostalih cvorova u 
-ostalim communitijima
 """
