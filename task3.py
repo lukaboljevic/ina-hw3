@@ -92,7 +92,7 @@ def evaluate_link_prediction(method, graph: nx.Graph, louvain_clustering: NodeCl
             Ln_args.append(louvain_clustering)
 
         Lp_index = method(*Lp_args)
-        Ln_index = method(*Lp_args)
+        Ln_index = method(*Ln_args)
         if i % 1500 == 0:
             print(f"\t\tCompared {i}/{sample_size} indexes ({method.__name__})")
         if Lp_index > Ln_index:
@@ -102,7 +102,7 @@ def evaluate_link_prediction(method, graph: nx.Graph, louvain_clustering: NodeCl
 
     return AUC(m1, m2, m)
 
-def compute_average_auc(graph_name, link_prediction_methods, num_runs, remove_file):
+def compute_average_auc(graph_name, link_prediction_methods, remove_file):
     file_name = f"link_pred_{graph_name}.txt"
     file_name_time = f"link_pred_{graph_name}_time.txt"
     if remove_file and os.path.exists(file_name):
@@ -125,10 +125,11 @@ def compute_average_auc(graph_name, link_prediction_methods, num_runs, remove_fi
 
     for method in link_prediction_methods:
         print(f"Trying out method {method.__name__} on {graph_name} graph")
-        average_auc = 0
-        start = perf_counter()
+        num_runs = 10 if method.__name__ == "louvain_index" else 20
         louv = louvain_clustering if method.__name__ == "louvain_index" else None
+        average_auc = 0
         print(f"Louvain parameter: {louv}")
+        start = perf_counter()
         for i in range(num_runs):
             print(f"\tIteration {i}/{num_runs}")
             average_auc += evaluate_link_prediction(method, graph, louv)
@@ -145,13 +146,6 @@ def compute_average_auc(graph_name, link_prediction_methods, num_runs, remove_fi
         print(f"Completed method {method.__name__} on {graph_name} graph!")
         print()
 
-num_runs = 20
 methods = [pref_attachment_index, adamic_adar_index, louvain_index]
-# methods = [louvain_index]
 for graph_name in ["circles", "erdos", "gnutella", "nec"]:
-    compute_average_auc(graph_name, methods, num_runs, True)
-"""
-I tested the "louvain index" over 10 runs cause it takes a butt load of time
-while the other two, preferential attachment and Adamic Abar index, i tested
-over 20 runs
-"""
+    compute_average_auc(graph_name, methods, True)

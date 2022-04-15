@@ -1,0 +1,3 @@
+Method: pref_attachment_index - 0.8421895187796089 average AUC
+Method: adamic_adar_index - 0.9960899426524923 average AUC
+Method: louvain_index - 0.956122356461228 average AUC
