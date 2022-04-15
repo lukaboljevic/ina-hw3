@@ -8,41 +8,13 @@ from math import log
 import matplotlib.pyplot as plt
 from time import perf_counter
 import os
+from utils import generate_erdos, read_graph
 
 """
 1. Louvain
 2. Infomap
 3. Label propagation
 """
-
-def read_graph(graphname):
-    """
-    Read a .net file, and return the graph and the communities
-    """
-    G = nx.Graph(name=graphname)
-    communities = {}
-    with open(f"graphs/{graphname}.net", 'r', encoding='utf8') as f:
-        f.readline()
-        
-        for line in f:
-            if line.startswith("*"):
-                break
-            else:
-                node_info = line.split("\"")
-                node = int(node_info[0]) - 1
-                label = node_info[1]
-                cluster = int(node_info[2]) if len(node_info) > 2 and len(node_info[2].strip()) > 0 else None
-                G.add_node(node, label=label, cluster=cluster)
-                if cluster not in communities:
-                    communities[cluster] = []
-                communities[cluster].append(node)
-
-        # add edges
-        for line in f:
-            node1_str, node2_str = line.split()[:2]
-            G.add_edge(int(node1_str) - 1, int(node2_str) - 1)
-
-    return G, NodeClustering(list(communities.values()), G, "actual")
 
 def infomap(graph: nx.Graph):
     """
@@ -144,20 +116,6 @@ def lancichinetti(mus, algo):
 ##### Erdos Renyi #####
 #######################
 
-def generate_erdos(avg_degree):
-    """
-    Average degree of Erdos Renyi graph
-    <k> = (n-1) * p => p = <k> / (n-1)
-    """
-    n = 1000
-    p = avg_degree / (n - 1)
-    graph = nx.gnp_random_graph(n, p)
-    communities = {}
-    for i, c in enumerate(nx.connected_components(graph)):
-        communities[i] = list(c)
-
-    return graph, NodeClustering(list(communities.values()), graph, "actual")
-
 def erdos_renyi(avg_degrees, algo):
     nvis = []
     normalization_constant = log(1000) # for normalized variation of information
@@ -165,7 +123,7 @@ def erdos_renyi(avg_degrees, algo):
     for avg_degree in avg_degrees:
         nvi = 0
         for _ in range(25):
-            graph, actual_comms = generate_erdos(avg_degree)
+            graph, actual_comms = generate_erdos(1000, avg_degree)
             start = perf_counter()
             predicted_comms = algo(graph)
             avg_time += perf_counter() - start
@@ -219,23 +177,22 @@ def plot(func, input_list, title, xlabel, metric):
     """
     algo_list = [louvain, infomap, label_propagation]
     colors = ["firebrick", "forestgreen", "goldenrod"]
-    filename = "average times 2.txt"
+    file_name = f"comm_det_{func.__name__}.txt"
+    if os.path.exists(file_name):
+        os.remove(file_name)
     print(f"Function: {func.__name__}")
     plt.style.use("ggplot")
     plt.figure(figsize=(10, 7))
     plt.title(title)
     plt.xlabel(xlabel)
     plt.ylabel(f"Average {metric}")
-    with open(filename, "a") as f:
-        f.write(f"Function: {func.__name__}\n")
 
     for i, algo in enumerate(algo_list):
         print(f"\tCurrent algorithm: {algo.__name__}")
         average_metric, average_time = func(input_list, algo)
-        with open(filename, "a") as f:
-            f.write(f"\t{algo.__name__} - {str(average_time)}\n")
-            if i == len(algo_list) - 1:
-                f.write("\n")
+        read_mode = "w" if not os.path.exists(file_name) else "a"
+        with open(file_name, read_mode) as f:
+            f.write(f"{algo.__name__} - {str(average_time)}\n")
         plt.plot(input_list, average_metric, label=f"{algo.__name__}", color=colors[i])
         plt.plot(input_list, average_metric, 'o', color="black")
     
@@ -250,13 +207,13 @@ lancichinetti_input = [0, 0.2, 0.4, 0.6, 0.8]
 erdos_input = [8, 16, 24, 32, 40]
 
 """Girvan Newman"""
-# plot(girvan_newman, girvan_input, "Girvan Newman accuracy", r"$\mu$", "NMI")
+plot(girvan_newman, girvan_input, "Girvan Newman accuracy", r"$\mu$", "NMI")
 
 """Lancichinetti"""
-# plot(lancichinetti, lancichinetti_input, "Lancichinetti accuracy", r"$\mu$", "NMI")
+plot(lancichinetti, lancichinetti_input, "Lancichinetti accuracy", r"$\mu$", "NMI")
 
 """Erdos Renyi"""
-# plot(erdos_renyi, erdos_input, "Erdos Renyi robustness", "Average degree", "NVI")
+plot(erdos_renyi, erdos_input, "Erdos Renyi robustness", "Average degree", "NVI")
 
 """Lusseau dolphin networks"""
 # print("Function: dolfins")
