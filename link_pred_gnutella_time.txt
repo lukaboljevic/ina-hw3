@@ -1,3 +1,3 @@
-Method: pref_attachment_index - 100.865 seconds for 20 runs
-Method: adamic_adar_index - 103.547 seconds for 20 runs
-Method: louvain_index - 2539.144 seconds for 10 runs
+Method: pref_attachment_index - 56.462 seconds for 20 runs
+Method: adamic_adar_index - 58.979 seconds for 20 runs
+Method: louvain_index - 2485.255 seconds for 10 runs
