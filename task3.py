@@ -34,14 +34,7 @@ def louvain_index(graph: nx.Graph, i, j, louvain_clustering: NodeClustering):
     n_c = induced_graph.number_of_nodes() # or len(community)
     m_c = induced_graph.number_of_edges()
 
-    return 2*m_c / (n_c*(n_c - 1))
-
-def AUC(m1, m2, m):
-    """
-    m1 ~ m'
-    m2 ~ m''
-    """
-    return (m1 + m2 / 2) / (m / 10)
+    return 2*m_c / (n_c*(n_c - 1)) 
 
 def equal(float_1, float_2):
     return abs(float_1 - float_2) < 0.00001
@@ -55,9 +48,8 @@ def evaluate_link_prediction(method, graph: nx.Graph, louvain_clustering: NodeCl
     m = graph.number_of_edges()
     edges = list(graph.edges)
     sample_size = round(m / 10)
-    Ln = set()
-    Lp = set()
 
+    Ln = set()
     while True:
         # using itertools.combinations is too costly for 25000 nodes so
         start_node = nodes[randrange(0, n)]
@@ -71,11 +63,9 @@ def evaluate_link_prediction(method, graph: nx.Graph, louvain_clustering: NodeCl
             break
     print(f"\t\tLn created ({method.__name__})")
     
-    while True:
-        edge = edges[randrange(0, m)] # if we sample the same edge, it's fine
-        Lp.add(edge)
-        if len(Lp) == sample_size:
-            break
+    Lp = sample(list(graph.edges), sample_size)
+    for edge in Lp:
+        graph.remove_edge(*edge)
     print(f"\t\tLp created ({method.__name__})")
 
     # Now to calculate AUC
@@ -100,7 +90,7 @@ def evaluate_link_prediction(method, graph: nx.Graph, louvain_clustering: NodeCl
         elif equal(Lp_index, Ln_index):
             m2 += 1
 
-    return AUC(m1, m2, m)
+    return (m1 + (m2 / 2)) / (m / 10)
 
 def compute_average_auc(graph_name, link_prediction_methods, remove_file):
     file_name = f"link_pred_{graph_name}.txt"
@@ -132,8 +122,13 @@ def compute_average_auc(graph_name, link_prediction_methods, remove_file):
         start = perf_counter()
         for i in range(num_runs):
             print(f"\tIteration {i}/{num_runs}")
-            average_auc += evaluate_link_prediction(method, graph, louv)
-        
+            # print(f"\tCalculating Louvain clustering for {graph_name}")
+            # print("\tLouvain clustering finished!")
+            # louv = louvain(graph) if method.__name__ == "louvain_index" else None
+            value = evaluate_link_prediction(method, graph.copy(), louv)
+            print(f"\tAUC for iteration {i}: {value}")
+            average_auc += value
+
         time_taken = round(perf_counter() - start, 3)
         average_auc /= num_runs
 
